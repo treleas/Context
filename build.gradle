@@ -20,8 +20,8 @@ apply plugin: "io.freefair.lombok"
 group = 'ru.rubbergrief'
 version = '0.1-SNAPSHOT'
 archivesBaseName = 'Context'
-targetCompatibility = '1.6'
-sourceCompatibility = '1.6'
+targetCompatibility = '1.8'
+sourceCompatibility = '1.8'
 
 repositories {
     mavenCentral()
