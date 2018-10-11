@@ -3,6 +3,8 @@ package ru.rubbergiref.context;
 import lombok.AccessLevel;
 import lombok.experimental.FieldDefaults;
 import lombok.experimental.UtilityClass;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.Map;
 import java.util.Set;
@@ -20,7 +22,7 @@ public class Context {
      * Get service provider
      */
     @SuppressWarnings("unchecked")
-    public <T> T context(final Class<T> service) {
+    public <T> @Nullable T context(final @NotNull Class<T> service) {
         final T provider = (T) Context.SERVICES.get(service);
         if (provider == null) {
             for (final Function<Class<?>, ?> parent : Context.PARENTS.values()) {
@@ -37,7 +39,7 @@ public class Context {
     /**
      * Register context
      */
-    public <T> void wrap(final Class<T> service, final T provider) {
+    public <T> void wrap(final @NotNull Class<T> service, final @NotNull T provider) {
         if (Context.wrapped(service)) {
             throw new IllegalStateException("Provider already registered");
         }
@@ -48,7 +50,7 @@ public class Context {
     /**
      * Unregister context
      */
-    public <T> void unwrap(final Class<T> service) {
+    public <T> void unwrap(final @NotNull Class<T> service) {
         if (Context.SERVICES.remove(service) == null) {
             throw new IllegalStateException("Provider not found");
         }
@@ -57,35 +59,35 @@ public class Context {
     /**
      * All services
      */
-    public Set<Class<?>> services() {
+    public @NotNull Set<Class<?>> services() {
         return Context.SERVICES.keySet();
     }
 
     /**
      * Is service registered
      */
-    public boolean wrapped(final Class<?> service) {
+    public boolean wrapped(final @NotNull Class<?> service) {
         return Context.SERVICES.containsKey(service);
     }
 
     /**
      * Register parent with get function
      */
-    public <T> void warpParent(final Class<T> serviceManager, final Function<Class<?>, ?> parent) {
+    public <T> void warpParent(final @NotNull Class<T> serviceManager, final @NotNull Function<Class<?>, ?> parent) {
         Context.PARENTS.put(serviceManager, parent);
     }
 
     /**
      * Unregister parent
      */
-    public <T> void unwrapParent(final Class<T> serviceManager) {
+    public <T> void unwrapParent(final @NotNull Class<T> serviceManager) {
         Context.PARENTS.remove(serviceManager);
     }
 
     /**
      * All parents
      */
-    public Set<Class<?>> parents() {
+    public @NotNull Set<Class<?>> parents() {
         return Context.PARENTS.keySet();
     }
 }

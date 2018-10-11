@@ -1,11 +1,11 @@
 plugins {
-    java
+    `java-library`
     `maven-publish`
     id("io.freefair.lombok") version "2.7.3"
 }
 
 group = "ru.rubbergrief"
-version = "0.1-SNAPSHOT"
+version = "0.1.1-SNAPSHOT"
 
 java {
     sourceCompatibility = JavaVersion.VERSION_1_8
@@ -14,6 +14,10 @@ java {
 
 repositories {
     mavenCentral()
+}
+
+dependencies {
+    api("org.jetbrains:annotations:16.0.3")
 }
 
 publishing {
