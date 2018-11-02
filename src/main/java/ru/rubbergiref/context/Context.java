@@ -8,15 +8,14 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
 
 @SuppressWarnings("unused")
 @UtilityClass
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class Context {
-    private final Map<Class<?>, Object> SERVICES = new ConcurrentHashMap<>();
-    private final Map<Class<?>, Function<Class<?>, ?>> PARENTS = new ConcurrentHashMap<>();
+    private final Map<Class<?>, Object> SERVICES = MapUtil.synchronizedMap();
+    private final Map<Class<?>, Function<Class<?>, ?>> PARENTS = MapUtil.synchronizedMap();
 
     /**
      * Get service provider
