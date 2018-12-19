@@ -9,6 +9,7 @@ import org.jetbrains.annotations.Nullable;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.Function;
+import java.util.function.Supplier;
 
 @SuppressWarnings("unused")
 @UtilityClass
@@ -33,6 +34,20 @@ public class Context {
         }
 
         return provider;
+    }
+
+    /**
+     * Get or register context
+     */
+    public <T> @NotNull T contextIfAbsent(final @NotNull Class<T> service, final @NotNull Supplier<T> supplier) {
+        final T provider = Context.context(service);
+        if (provider != null) {
+            return provider;
+        }
+
+        final T newProvider = supplier.get();
+        Context.wrap(service, newProvider);
+        return newProvider;
     }
 
     /**
