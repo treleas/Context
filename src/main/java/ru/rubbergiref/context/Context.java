@@ -7,6 +7,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.function.Function;
 import java.util.function.Supplier;
@@ -34,6 +35,25 @@ public class Context {
         }
 
         return provider;
+    }
+
+    /**
+     * Get service provider with throw
+     */
+    public <T> @NotNull T unsafeContext(final @NotNull Class<T> service) {
+        final T provider = context(service);
+        if (provider == null) {
+            throw new IllegalStateException("Provider not found");
+        }
+
+        return provider;
+    }
+
+    /**
+     * Get service provider optional
+     */
+    public <T> @NotNull Optional<T> safeContext(final @NotNull Class<T> service) {
+        return Optional.ofNullable(context(service));
     }
 
     /**
