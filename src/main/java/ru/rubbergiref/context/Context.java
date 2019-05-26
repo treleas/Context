@@ -6,23 +6,26 @@ import lombok.experimental.UtilityClass;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.lang.annotation.Annotation;
+import java.lang.reflect.Field;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
-@SuppressWarnings("unused")
+@SuppressWarnings({"unchecked", "unused"})
 @UtilityClass
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class Context {
+    public final Object ANNOTATE_OBJECT = new Object();
+
     private final Map<Class<?>, Object> SERVICES = MapUtil.synchronizedMap();
     private final Map<Class<?>, Function<Class<?>, ?>> PARENTS = MapUtil.synchronizedMap();
 
     /**
      * Get service provider
      */
-    @SuppressWarnings("unchecked")
     public <T> @Nullable T context(final @NotNull Class<T> service) {
         final T provider = (T) Context.SERVICES.get(service);
         if (provider == null) {
@@ -123,5 +126,50 @@ public class Context {
      */
     public @NotNull Set<Class<?>> parents() {
         return Context.PARENTS.keySet();
+    }
+
+    /**
+     * Inject contexts into all annotated filed
+     */
+    @SuppressWarnings("UnusedReturnValue")
+    public <T> @NotNull T injectAnnotations(final @NotNull T t) {
+        final Class<?> clazz = t.getClass();
+
+        for (final Field field : clazz.getDeclaredFields()) {
+            for (final Annotation annotation : field.getAnnotations()) {
+                if (!annotation.annotationType().equals(ContextInjectable.class)) {
+                    continue;
+                }
+
+                try {
+                    if (field.get(t) != Context.ANNOTATE_OBJECT) {
+                        continue;
+                    }
+
+                    final Object provider = context(field.getType());
+                    if (provider == null) {
+                        continue;
+                    }
+
+                    field.setAccessible(true);
+                    field.set(t, provider);
+                } catch (final IllegalAccessException e) {
+                    throw new IllegalStateException("Error inject provider", e);
+                }
+            }
+        }
+
+        return t;
+    }
+
+    public <T> void train(final @NotNull T t) {
+        final Class<?> clazz = t.getClass();
+        final ClassLoader classLoader = clazz.getClassLoader();
+
+        try {
+            classLoader.loadClass(clazz.getName());
+        } catch (final ClassNotFoundException e) {
+            throw new IllegalStateException("Error to train class", e);
+        }
     }
 }
