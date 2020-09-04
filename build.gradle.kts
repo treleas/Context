@@ -5,7 +5,7 @@ plugins {
 }
 
 group = "ru.rubbergrief"
-version = "0.1.4-SNAPSHOT"
+version = "0.1.5-SNAPSHOT"
 
 java {
     sourceCompatibility = JavaVersion.VERSION_1_8
@@ -17,7 +17,7 @@ repositories {
 }
 
 dependencies {
-    api("org.jetbrains:annotations:20.0.0")
+    api("org.jetbrains:annotations:20.1.0")
     compileOnly("it.unimi.dsi:fastutil:8.2.2")
 }
 
