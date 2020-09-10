@@ -1,7 +1,7 @@
 plugins {
     `java-library`
     `maven-publish`
-    id("io.freefair.lombok") version "4.1.4"
+    id("io.freefair.lombok") version "5.2.1"
 }
 
 group = "ru.rubbergrief"
