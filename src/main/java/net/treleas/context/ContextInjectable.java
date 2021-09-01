@@ -1,4 +1,4 @@
-package ru.rubbergiref.context;
+package net.treleas.context;
 
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;

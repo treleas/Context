@@ -1,4 +1,4 @@
-package ru.rubbergiref.context;
+package net.treleas.context;
 
 import lombok.AccessLevel;
 import lombok.experimental.FieldDefaults;

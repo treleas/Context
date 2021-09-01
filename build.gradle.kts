@@ -4,8 +4,8 @@ plugins {
     id("io.freefair.lombok") version "5.2.1"
 }
 
-group = "ru.rubbergrief"
-version = "0.1.5-SNAPSHOT"
+group = "net.treleas"
+version = "0.1.6-SNAPSHOT"
 
 java {
     sourceCompatibility = JavaVersion.VERSION_1_8
