@@ -18,7 +18,7 @@ repositories {
 
 dependencies {
     api("org.jetbrains:annotations:25.0.0")
-    compileOnly("it.unimi.dsi:fastutil:8.5.14")
+    compileOnly("it.unimi.dsi:fastutil:8.5.18")
 }
 
 publishing {
