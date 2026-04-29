@@ -1,7 +1,7 @@
 plugins {
     `java-library`
     `maven-publish`
-    id("io.freefair.lombok") version "9.1.0"
+    id("io.freefair.lombok") version "9.5.0"
 }
 
 group = "net.treleas"
