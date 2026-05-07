@@ -44,6 +44,8 @@ public interface FutureChain {
         return thenAppend(owner, service, null, bean);
     }
 
+    @NonNull FutureChain thenCompose(@NonNull FutureChain chain);
+
     /**
      * Returns a {@link CompletableFuture} that completes when all beans
      * in the chain have been successfully injected and registered.
@@ -58,6 +60,11 @@ public interface FutureChain {
         public @NonNull <T> FutureChain thenAppend(@NonNull Object owner, @NonNull Class<T> service, @Nullable String tag, @NonNull T bean) {
             return new Impl(executor, future.thenRunAsync(() -> di.appendBean(owner, service, tag, bean), executor), di);
         }
+
+        @Override
+        public @NonNull FutureChain thenCompose(@NonNull FutureChain chain) {
+            return new Impl(executor, chain.future(), di);
+        }
     }
 
     // Empty implementation
@@ -66,6 +73,11 @@ public interface FutureChain {
         public @NonNull <T> FutureChain thenAppend(@NonNull Object owner, @NonNull Class<T> service, @Nullable String tag, @NonNull T bean) {
             var future = CompletableFuture.runAsync(() -> di.appendBean(owner, service, tag, bean), executor);
             return new Impl(executor, future, di);
+        }
+
+        @Override
+        public @NonNull FutureChain thenCompose(@NonNull FutureChain chain) {
+            return new Impl(executor, chain.future(), di);
         }
 
         @Override
