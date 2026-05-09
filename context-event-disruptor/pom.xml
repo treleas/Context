@@ -11,21 +11,21 @@
         <relativePath>../pom.xml</relativePath>
     </parent>
 
-    <artifactId>context-core</artifactId>
+    <artifactId>context-event-disruptor</artifactId>
 
-    <name>Context Core</name>
-    <description>Main Context package</description>
+    <name>Context Event Disruptor</name>
+    <description>Disruptor optimizations for Context EventBus</description>
 
     <dependencies>
-        <!--annotations-->
-        <dependency>
-            <groupId>org.jspecify</groupId>
-            <artifactId>jspecify</artifactId>
-        </dependency>
         <!--libs-->
         <dependency>
-            <groupId>org.slf4j</groupId>
-            <artifactId>slf4j-api</artifactId>
+            <groupId>net.treleas</groupId>
+            <artifactId>context-event</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.lmax</groupId>
+            <artifactId>disruptor</artifactId>
         </dependency>
     </dependencies>
 

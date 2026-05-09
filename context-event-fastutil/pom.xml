@@ -11,21 +11,21 @@
         <relativePath>../pom.xml</relativePath>
     </parent>
 
-    <artifactId>context-core</artifactId>
+    <artifactId>context-event-fastutil</artifactId>
 
-    <name>Context Core</name>
-    <description>Main Context package</description>
+    <name>Context Event FastUtil</name>
+    <description>FastUtil optimizations for Context EventBus</description>
 
     <dependencies>
-        <!--annotations-->
-        <dependency>
-            <groupId>org.jspecify</groupId>
-            <artifactId>jspecify</artifactId>
-        </dependency>
         <!--libs-->
         <dependency>
-            <groupId>org.slf4j</groupId>
-            <artifactId>slf4j-api</artifactId>
+            <groupId>net.treleas</groupId>
+            <artifactId>context-event</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>it.unimi.dsi</groupId>
+            <artifactId>fastutil</artifactId>
         </dependency>
     </dependencies>
 

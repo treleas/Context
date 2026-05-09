@@ -11,21 +11,20 @@
         <relativePath>../pom.xml</relativePath>
     </parent>
 
-    <artifactId>context-core</artifactId>
+    <artifactId>context-di-fastutil</artifactId>
 
-    <name>Context Core</name>
-    <description>Main Context package</description>
+    <name>Context DI FastUtil</name>
+    <description>FastUtil optimizations for Context DI</description>
 
     <dependencies>
-        <!--annotations-->
         <dependency>
-            <groupId>org.jspecify</groupId>
-            <artifactId>jspecify</artifactId>
+            <groupId>net.treleas</groupId>
+            <artifactId>context-di</artifactId>
+            <version>${project.version}</version>
         </dependency>
-        <!--libs-->
         <dependency>
-            <groupId>org.slf4j</groupId>
-            <artifactId>slf4j-api</artifactId>
+            <groupId>it.unimi.dsi</groupId>
+            <artifactId>fastutil</artifactId>
         </dependency>
     </dependencies>
 

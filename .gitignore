@@ -9,6 +9,9 @@ target/
 build
 gradle-app.setting
 
+# maven
+dependency-reduced-pom.xml
+
 ### IntelliJ IDEA ###
 /.idea
 *.iws
