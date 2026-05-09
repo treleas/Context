@@ -1,4 +1,4 @@
-package net.treleas.context.engine;
+package net.treleas.context.event.engine;
 
 import net.treleas.context.event.EventSubscriber;
 import org.jspecify.annotations.NullUnmarked;
@@ -9,9 +9,9 @@ public class EventHolder {
 
     private Object event;
     private EventSubscriber[] subscribers;
-    private CompletableFuture<Void> future;
+    private CompletableFuture<Object> future;
 
-    public void set(Object event, EventSubscriber[] subscribers, CompletableFuture<Void> future) {
+    public void set(Object event, EventSubscriber[] subscribers, CompletableFuture<Object> future) {
         this.event = event;
         this.subscribers = subscribers;
         this.future = future;
@@ -31,7 +31,7 @@ public class EventHolder {
         return subscribers;
     }
 
-    public @NullUnmarked CompletableFuture<Void> future() {
+    public @NullUnmarked CompletableFuture<Object> future() {
         return future;
     }
 }

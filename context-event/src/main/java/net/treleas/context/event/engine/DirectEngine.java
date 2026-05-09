@@ -1,12 +1,12 @@
 package net.treleas.context.event.engine;
 
+import net.treleas.context.event.EventSubscriber;
 import net.treleas.context.event.SubscriberDispatcher;
 import net.treleas.context.event.SubscriberGroup;
 import net.treleas.context.event.pool.EventPool;
 import org.jspecify.annotations.NonNull;
 
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutorService;
 
 public class DirectEngine implements EventEngine {
 
@@ -17,21 +17,21 @@ public class DirectEngine implements EventEngine {
     }
 
     @Override
-    public void initialize(@NonNull EventPool pool, @NonNull ExecutorService executor, @NonNull SubscriberDispatcher dispatcher) {
+    public void initialize(@NonNull EventPool pool, @NonNull SubscriberDispatcher dispatcher) {
         this.pool = pool;
         this.dispatcher = dispatcher;
     }
 
-
     @Override
-    public @NonNull CompletableFuture<Void> post(@NonNull Object event) {
+    public @NonNull CompletableFuture<Object> post(@NonNull Object event) {
         SubscriberGroup group = pool.subscribers(event.getClass());
         if (group == null) {
-            return CompletableFuture.completedFuture(null);
+            return CompletableFuture.completedFuture(event);
         }
 
-        CompletableFuture<Void> future = new CompletableFuture<>();
-        dispatcher.dispatch(event, group.subscribers(), 0, future);
+        EventSubscriber[] subscribers = group.subscribers();
+        CompletableFuture<Object> future = new CompletableFuture<>();
+        dispatcher.dispatch(event, subscribers, 0, subscribers.length, future);
 
         return future;
     }

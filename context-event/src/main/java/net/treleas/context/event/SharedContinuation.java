@@ -7,16 +7,18 @@ final class SharedContinuation implements Continuation {
     private final EventBus bus;
     final Object event;
     final EventSubscriber[] subs;
-    final CompletableFuture<Void> future;
+    final CompletableFuture<Object> future;
     final boolean isCancellable;
+    final int limit;
     private int index;
 
-    SharedContinuation(EventBus bus, Object event, EventSubscriber[] subs, CompletableFuture<Void> future) {
+    SharedContinuation(EventBus bus, Object event, EventSubscriber[] subs, int startIndex, int limit, CompletableFuture<Object> future) {
         this.bus = bus;
         this.event = event;
         this.subs = subs;
         this.future = future;
-        this.index = 0;
+        this.index = startIndex;
+        this.limit = limit;
         this.isCancellable = event instanceof Cancellable;
     }
 

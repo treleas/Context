@@ -4,7 +4,6 @@ import net.treleas.context.Lifecycle;
 import net.treleas.context.event.engine.EventEngine;
 import net.treleas.context.event.pool.EventPool;
 import org.jspecify.annotations.NonNull;
-import org.jspecify.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -14,6 +13,7 @@ import java.lang.invoke.MethodHandles;
 import java.lang.reflect.Method;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
+import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
 /**
@@ -36,25 +36,25 @@ public record EventBus(@NonNull ExecutorService executor, @NonNull EventPool poo
         this.pool = pool;
         this.engine = engine;
 
-        this.engine.initialize(pool, executor, this::processNext);
+        this.engine.initialize(pool, this::processNext);
     }
 
-    private void processNext(Object event, EventSubscriber[] subs, int index, CompletableFuture<Void> future) {
-        runLoop(new SharedContinuation(this, event, subs, future));
+    private void processNext(Object event, EventSubscriber[] subs, int index, int limit, CompletableFuture<Object> future) {
+        runLoop(new SharedContinuation(this, event, subs, index, limit, future));
     }
 
     void runLoop(SharedContinuation ctx) {
         final EventSubscriber[] subs = ctx.subs;
         final Object event = ctx.event;
-        final boolean isCancellable = ctx.isCancellable;
+        final int limit = ctx.limit;
 
         try {
-            for (int i = ctx.index(); i < subs.length; i++) {
+            for (int i = ctx.index(); i < limit; i++) {
                 EventSubscriber sub = subs[i];
                 ctx.next(); // Shifting the index for a possible resume()
 
                 // Check for cancellation before executing
-                if (isCancellable && ((Cancellable) event).isCancelled() && !sub.ignoreCancelled()) {
+                if (ctx.isCancellable && ((Cancellable) event).isCancelled() && !sub.ignoreCancelled()) {
                     continue;
                 }
 
@@ -62,8 +62,11 @@ public record EventBus(@NonNull ExecutorService executor, @NonNull EventPool poo
                     case EventSubscriber.SYNC -> sub.methodHandle().invoke(event);
                     case EventSubscriber.ASYNC -> {
                         this.executor.execute(() -> {
-                            try { sub.methodHandle().invoke(event, ctx); }
-                            catch (Throwable t) { ctx.fail(t); }
+                            try {
+                                sub.methodHandle().invoke(event, ctx);
+                            } catch (Throwable t) {
+                                ctx.fail(t);
+                            }
                         });
                         return; // wait for resume()
                     }
@@ -154,33 +157,26 @@ public record EventBus(@NonNull ExecutorService executor, @NonNull EventPool poo
      * @param event The event object to publish.
      * @return A future representing the event delivery status.
      */
-    public @NonNull CompletableFuture<Void> post(@NonNull Object event) {
+    public <E> @NonNull CompletableFuture<E> fire(@NonNull E event) {
         SubscriberGroup group = pool.subscribers(event.getClass());
         if (group == null) {
-            return CompletableFuture.completedFuture(null);
+            return CompletableFuture.completedFuture(event);
         }
 
         EventSubscriber[] subs = group.subscribers();
 
-        if (!group.hasAsyncOrTask()) {
+        // Fast Path
+        if (!group.hasAsyncOrTask() && subs.length < 128) {
             try {
-                boolean isCancellable = event instanceof Cancellable;
-                for (int i = 0; i < subs.length; i++) {
-                    EventSubscriber sub = subs[i];
-                    if (isCancellable && ((Cancellable) event).isCancelled() && !sub.ignoreCancelled()) {
-                        continue;
-                    }
-                    sub.methodHandle().invoke(event);
-                }
-                return CompletableFuture.completedFuture(null);
+                executeSync(event, group.subscribers());
+                return CompletableFuture.completedFuture(event); // Возвращаем event, а не null
             } catch (Throwable t) {
-                CompletableFuture<Void> fail = new CompletableFuture<>();
-                fail.completeExceptionally(t);
-                return fail;
+                return CompletableFuture.failedFuture(t); // В Java 9+ лаконичнее
             }
         }
 
-        return engine.post(event);
+        // Slow Path
+        return engine.post(event).thenApply(_ -> event);
     }
 
     /**
@@ -189,8 +185,29 @@ public record EventBus(@NonNull ExecutorService executor, @NonNull EventPool poo
      *
      * @param event The event object to publish.
      */
-    public void postAndForget(@NonNull Object event) {
-        engine.post(event);
+    public void fireAndForget(@NonNull Object event) {
+        SubscriberGroup group = pool.subscribers(event.getClass());
+        if (group == null) {
+            return;
+        }
+
+        EventSubscriber[] subs = group.subscribers();
+
+        // Fast Path
+        if (!group.hasAsyncOrTask() && subs.length < 128) {
+            try {
+                executeSync(event, subs);
+            } catch (Throwable t) {
+                LOGGER.error("Event delivery failed (sync)", t);
+            }
+            return;
+        }
+
+        // Slow Path
+        engine.post(event).exceptionally(t -> {
+            LOGGER.error("Event delivery failed (async)", t);
+            return null;
+        });
     }
 
     /**
@@ -200,12 +217,82 @@ public record EventBus(@NonNull ExecutorService executor, @NonNull EventPool poo
      * @param event    The event object to publish.
      * @param callback A consumer to be notified of completion, receiving a throwable if an error occurred.
      */
-    public void postThen(@NonNull Object event, @Nullable Consumer<Throwable> callback) {
-        engine.post(event).whenComplete((_, throwable) -> {
-            if (callback != null) {
-                callback.accept(throwable);
+    public void fireThen(@NonNull Object event, @NonNull Consumer<Throwable> callback) {
+        SubscriberGroup group = pool.subscribers(event.getClass());
+        if (group == null) {
+            callback.accept(null);
+            return;
+        }
+
+        EventSubscriber[] subs = group.subscribers();
+
+        // Fast Path
+        if (!group.hasAsyncOrTask() && subs.length < 128) {
+            Throwable error = null;
+            try {
+                executeSync(event, subs);
+            } catch (Throwable t) {
+                error = t;
+                LOGGER.error("Event delivery failed (sync)", t);
             }
+
+            // run callback without completable futures
+            callback.accept(error);
+            return;
+        }
+
+        // Slow Path
+        engine.post(event).whenComplete((_, throwable) -> {
+            callback.accept(throwable);
         });
+    }
+
+    /**
+     * Publishes an event and executes a callback with the event instance and any error.
+     * Uses zero-allocation fast path for synchronous events.
+     *
+     * @param <E>      The type of the event.
+     * @param event    The event object to publish.
+     * @param callback A bi-consumer receiving the event and a throwable (null if successful).
+     */
+    public <E> void fireThen(@NonNull E event, @NonNull BiConsumer<E, Throwable> callback) {
+        SubscriberGroup group = pool.subscribers(event.getClass());
+        if (group == null) {
+            callback.accept(event, null);
+            return;
+        }
+
+        EventSubscriber[] subs = group.subscribers();
+
+        // Fast path
+        if (!group.hasAsyncOrTask() && subs.length < 128) {
+            Throwable error = null;
+            try {
+                executeSync(event, subs);
+            } catch (Throwable t) {
+                error = t;
+                LOGGER.error("Event delivery failed (sync)", t);
+            }
+
+            callback.accept(event, error);
+            return;
+        }
+
+        // Slow Path
+        engine.post(event).whenComplete((_, throwable) -> {
+            callback.accept(event, throwable);
+        });
+    }
+
+    private void executeSync(Object event, EventSubscriber[] subs) throws Throwable {
+        boolean isCancellable = event instanceof Cancellable;
+        for (int i = 0; i < subs.length; i++) {
+            EventSubscriber sub = subs[i];
+            if (isCancellable && ((Cancellable) event).isCancelled() && !sub.ignoreCancelled()) {
+                continue;
+            }
+            sub.methodHandle().invoke(event);
+        }
     }
 
     /**

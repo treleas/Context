@@ -1,8 +1,7 @@
 package event;
 
-import com.lmax.disruptor.YieldingWaitStrategy;
-import net.treleas.context.engine.DisruptorEngine;
 import net.treleas.context.event.EventBus;
+import net.treleas.context.event.engine.EventEngine;
 import net.treleas.context.event.pool.FastutilEventPool;
 import org.openjdk.jmh.annotations.*;
 import org.openjdk.jmh.infra.Blackhole;
@@ -30,14 +29,11 @@ public class EventBusBenchmark {
 
     @Setup
     public void setup() {
-        int threads = Runtime.getRuntime().availableProcessors();
-        var strategy = new YieldingWaitStrategy();
-
-        executor = Executors.newFixedThreadPool(threads);
-        eventBus = EventBus.create(executor, FastutilEventPool.eventPool(), DisruptorEngine.engine(strategy, threads));
+        executor = Executors.newFixedThreadPool(Math.min(1, Runtime.getRuntime().availableProcessors() - 2));
+        eventBus = EventBus.create(executor, FastutilEventPool.eventPool(), EventEngine.direct());
 
         virtualExecutor = Executors.newVirtualThreadPerTaskExecutor();
-        virtualEventBus = EventBus.create(virtualExecutor, FastutilEventPool.eventPool(), DisruptorEngine.engine(strategy, threads));
+        virtualEventBus = EventBus.create(virtualExecutor, FastutilEventPool.eventPool(), EventEngine.direct());
 
         event = new TestEvent();
 
@@ -56,29 +52,15 @@ public class EventBusBenchmark {
         virtualExecutor.shutdownNow();
     }
 
-    /*
-    @Benchmark
-    @Threads(Threads.MAX)
-    public void testContented(Blackhole bh) throws Exception {
-        bh.consume(eventBus.post(event).get());
-    }
-
-    @Benchmark
-    @Threads(Threads.MAX)
-    public void testVirtual(Blackhole bh) throws Exception {
-        bh.consume(virtualEventBus.post(event).get());
-    }
-     */
-
     @Benchmark
     @Threads(Threads.MAX)
     public void testContentedFireAndForget(Blackhole bh) {
-        bh.consume(eventBus.post(event));
+        eventBus.fireAndForget(event);
     }
 
     @Benchmark
     @Threads(Threads.MAX)
     public void testVirtualFireAndForget(Blackhole bh) {
-        bh.consume(virtualEventBus.post(event));
+        virtualEventBus.fireAndForget(event);
     }
 }

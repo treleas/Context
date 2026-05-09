@@ -6,7 +6,6 @@ import net.treleas.context.event.pool.EventPool;
 import org.jspecify.annotations.NonNull;
 
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutorService;
 
 /**
  * Defines the core execution logic for event publication and distribution.
@@ -20,10 +19,9 @@ public interface EventEngine extends Lifecycle {
      * Initializes the engine with the required infrastructure.
      *
      * @param pool       The subscriber pool used to retrieve listeners for events.
-     * @param executor   The executor service for handling asynchronous tasks.
      * @param dispatcher The dispatcher logic used to invoke subscribers.
      */
-    void initialize(@NonNull EventPool pool, @NonNull ExecutorService executor, @NonNull SubscriberDispatcher dispatcher);
+    void initialize(@NonNull EventPool pool, @NonNull SubscriberDispatcher dispatcher);
 
     /**
      * Submits an event into the engine for processing.
@@ -31,7 +29,7 @@ public interface EventEngine extends Lifecycle {
      * @param event The event object to be published.
      * @return A future that completes when the engine has finished delivering the event to all subscribers.
      */
-    @NonNull CompletableFuture<Void> post(@NonNull Object event);
+    @NonNull CompletableFuture<Object> post(@NonNull Object event);
 
     /**
      * Creates a synchronous engine that dispatches events immediately in the calling thread

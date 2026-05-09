@@ -17,8 +17,9 @@ public interface SubscriberDispatcher {
      *
      * @param event  The event object being published.
      * @param subs   The array of subscribers registered for this event type.
-     * @param index  The starting index in the subscriber array (used for recursive/async resumption).
+     * @param start  The starting index in the subscriber array (used for recursive/async resumption).
+     * @param limit  The limit in the subscriber array (used for recursive/async resumption).
      * @param future The future that will be completed once the entire delivery chain is finished.
      */
-    void dispatch(Object event, EventSubscriber[] subs, int index, CompletableFuture<Void> future);
+    void dispatch(Object event, EventSubscriber[] subs, int start, int limit, CompletableFuture<Object> future);
 }

@@ -64,7 +64,7 @@ class EventBusTest {
         TestListener listener = new TestListener();
         eventBus.register(listener);
 
-        eventBus.post(new TestEvent("Hello")).get(5, TimeUnit.SECONDS);
+        eventBus.fire(new TestEvent("Hello")).get(5, TimeUnit.SECONDS);
 
         assertThat(listener.callCount.get()).isEqualTo(1);
     }
@@ -83,7 +83,7 @@ class EventBusTest {
         };
 
         eventBus.register(listener);
-        eventBus.post(event).get(5, TimeUnit.SECONDS);
+        eventBus.fire(event).get(5, TimeUnit.SECONDS);
 
         assertThat(callCount.get()).isEqualTo(0);
     }
@@ -101,7 +101,7 @@ class EventBusTest {
         };
 
         eventBus.register(listener);
-        eventBus.post(new TestEvent("Async")).get(5, TimeUnit.SECONDS);
+        eventBus.fire(new TestEvent("Async")).get(5, TimeUnit.SECONDS);
 
         assertThat(step.get()).isEqualTo(1);
     }
@@ -112,7 +112,7 @@ class EventBusTest {
         eventBus.register(listener);
         eventBus.unregister(listener);
 
-        eventBus.post(new TestEvent("Ghost")).get(5, TimeUnit.SECONDS);
+        eventBus.fire(new TestEvent("Ghost")).get(5, TimeUnit.SECONDS);
 
         assertThat(listener.callCount.get()).isEqualTo(0);
     }
@@ -127,7 +127,7 @@ class EventBusTest {
         };
 
         eventBus.register(evilListener);
-        CompletableFuture<Void> future = eventBus.post(new TestEvent("Crash"));
+        CompletableFuture<TestEvent> future = eventBus.fire(new TestEvent("Crash"));
 
         assertThat(future).failsWithin(5, TimeUnit.SECONDS)
                 .withThrowableThat()
