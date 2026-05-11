@@ -117,7 +117,7 @@ public record Di(@NonNull BeanPool beanPool, @NonNull Injector injector) {
             }
         }
 
-        beanPool.appendBeam(owner, service, tag, bean);
+        beanPool.appendBean(owner, service, tag, bean);
         return this;
     }
 

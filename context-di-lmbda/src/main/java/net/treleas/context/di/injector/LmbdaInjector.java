@@ -4,6 +4,7 @@ import it.unimi.dsi.fastutil.objects.Reference2ObjectMap;
 import it.unimi.dsi.fastutil.objects.Reference2ObjectMaps;
 import it.unimi.dsi.fastutil.objects.Reference2ObjectOpenHashMap;
 import net.treleas.context.di.Di;
+import net.treleas.context.di.annotation.Bean;
 import net.treleas.context.di.annotation.Inject;
 import net.treleas.context.di.annotation.Tag;
 import org.jspecify.annotations.NonNull;
@@ -32,16 +33,23 @@ public class LmbdaInjector implements Injector {
 
     @Override
     public void inject(@NonNull Di di, @NonNull Object bean) {
-        Accessor[] accessors = cache.computeIfAbsent(bean.getClass(), this::createAccessors);
+        Class<?> clazz = bean.getClass();
+        if (!clazz.isAnnotationPresent(Bean.class)) {
+            return;
+        }
+
+        Accessor[] accessors = cache.computeIfAbsent(clazz, this::createAccessors);
 
         for (Accessor accessor : accessors) {
             Object value = (accessor.tag != null)
                     ? di.taggedBean(accessor.tag)
                     : di.classifiedBean(accessor.type);
-
-            if (value != null) {
-                accessor.setter.accept(bean, value);
+            if (value == null) {
+                LOGGER.info("Bean not found for annotated field {}", accessor.type.getSimpleName());
+                continue;
             }
+
+            accessor.setter.accept(bean, value);
         }
     }
 

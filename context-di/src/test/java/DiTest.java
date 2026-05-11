@@ -41,7 +41,7 @@ class DiTest {
         // Then
         verify(injector).inject(di, service);
         verify(service).mount();
-        verify(beanPool).appendBeam(owner, MyService.class, null, service);
+        verify(beanPool).appendBean(owner, MyService.class, null, service);
     }
 
     @Test

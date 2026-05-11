@@ -40,7 +40,7 @@ public class ConcurrentBeanPool implements BeanPool {
     }
 
     @Override
-    public <T> void appendBeam(@NonNull Object owner, @NonNull Class<T> service, @Nullable String tag, @NonNull T provider) {
+    public <T> void appendBean(@NonNull Object owner, @NonNull Class<T> service, @Nullable String tag, @NonNull T provider) {
         BeanData<T> data = new BeanData<>(service, tag, provider);
 
         if (tag == null || !beans.containsKey(service)) {

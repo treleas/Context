@@ -47,7 +47,7 @@ public class FastutilBeanPool implements BeanPool {
     }
 
     @Override
-    public <T> void appendBeam(@NonNull Object owner, @NonNull Class<T> service, @Nullable String tag, @NonNull T provider) {
+    public <T> void appendBean(@NonNull Object owner, @NonNull Class<T> service, @Nullable String tag, @NonNull T provider) {
         final BeanData<T> data = new BeanData<>(service, tag, provider);
 
         writeLock.lock();

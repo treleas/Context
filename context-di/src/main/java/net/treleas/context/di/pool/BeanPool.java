@@ -40,7 +40,7 @@ public interface BeanPool {
      * @param provider the actual bean instance to store
      * @param <T>      the type of the service
      */
-    <T> void appendBeam(@NonNull Object owner, @NonNull Class<T> service, @Nullable String tag, @NonNull T provider);
+    <T> void appendBean(@NonNull Object owner, @NonNull Class<T> service, @Nullable String tag, @NonNull T provider);
 
     /**
      * Removes all beans associated with the specified owner.

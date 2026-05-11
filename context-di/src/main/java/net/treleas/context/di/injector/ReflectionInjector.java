@@ -22,11 +22,11 @@ public class ReflectionInjector implements Injector {
             return;
         }
 
-        Class<?> clazz = bean.getClass();
-        while (clazz != null && clazz != Object.class) {
-            for (Field field : clazz.getDeclaredFields()) {
-                if (clazz.isRecord()) {
-                    LOGGER.debug("Skipping field {} because {} is a record", field.getName(), clazz.getSimpleName());
+        Class<?> current = bean.getClass();
+        while (current != null && current != Object.class) {
+            for (Field field : current.getDeclaredFields()) {
+                if (current.isRecord()) {
+                    LOGGER.debug("Skipping field {} because {} is a record", field.getName(), current.getSimpleName());
                     continue;
                 }
 
@@ -37,18 +37,21 @@ public class ReflectionInjector implements Injector {
                 try {
                     Tag annotation = field.getAnnotation(Tag.class);
                     String tag = (annotation != null && !annotation.tag().isEmpty()) ? annotation.tag() : null;
-                    Object provider = (tag != null)
+                    Object value = (tag != null)
                             ? di.taggedBean(tag)
                             : di.classifiedBean(field.getType());
-                    if (provider != null) {
-                        field.setAccessible(true);
-                        field.set(bean, provider);
+                    if (value == null) {
+                        LOGGER.info("Bean not found for annotated field {}", field.getName());
+                        continue;
                     }
+
+                    field.setAccessible(true);
+                    field.set(bean, value);
                 } catch (IllegalAccessException e) {
                     LOGGER.error("Failed to inject field \"{}\"", field.getName(), e);
                 }
             }
-            clazz = clazz.getSuperclass();
+            current = current.getSuperclass();
         }
     }
 }

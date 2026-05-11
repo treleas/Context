@@ -38,13 +38,15 @@ public class VarHandleInjector implements Injector {
             Object provider = (accessor.tag != null)
                     ? di.taggedBean(accessor.tag)
                     : di.classifiedBean(accessor.type);
+            if (provider == null) {
+                LOGGER.info("Bean not found for annotated field {}", accessor.type.getSimpleName());
+                continue;
+            }
 
-            if (provider != null) {
-                try {
-                    accessor.handle.set(bean, provider);
-                } catch (Exception e) {
-                    LOGGER.error("Failed to inject via VarHandle", e);
-                }
+            try {
+                accessor.handle.set(bean, provider);
+            } catch (Exception e) {
+                LOGGER.error("Failed to inject via VarHandle", e);
             }
         }
     }
