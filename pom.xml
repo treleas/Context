@@ -6,7 +6,7 @@
 
     <groupId>net.treleas</groupId>
     <artifactId>context-parent</artifactId>
-    <version>${revision}</version>
+    <version>1.0.0-SNAPSHOT</version>
     <packaging>pom</packaging>
 
     <name>Context Parent</name>
@@ -60,7 +60,6 @@
     </profiles>
 
     <properties>
-        <revision>1.0.0-SNAPSHOT</revision>
         <maven.compiler.source>25</maven.compiler.source>
         <maven.compiler.target>25</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -196,11 +195,6 @@
                     <artifactId>maven-surefire-plugin</artifactId>
                     <version>3.5.5</version>
                 </plugin>
-                <plugin>
-                    <groupId>org.codehaus.mojo</groupId>
-                    <artifactId>flatten-maven-plugin</artifactId>
-                    <version>1.7.3</version>
-                </plugin>
             </plugins>
         </pluginManagement>
 
@@ -219,30 +213,6 @@
                 <configuration>
                     <argLine>-Xshare:off -XX:+EnableDynamicAgentLoading</argLine>
                 </configuration>
-            </plugin>
-            <plugin>
-                <groupId>org.codehaus.mojo</groupId>
-                <artifactId>flatten-maven-plugin</artifactId>
-                <configuration>
-                    <updatePomFile>true</updatePomFile>
-                    <flattenMode>resolveCiFriendliesOnly</flattenMode>
-                </configuration>
-                <executions>
-                    <execution>
-                        <id>flatten</id>
-                        <phase>initialize</phase>
-                        <goals>
-                            <goal>flatten</goal>
-                        </goals>
-                    </execution>
-                    <execution>
-                        <id>flatten.clean</id>
-                        <phase>clean</phase>
-                        <goals>
-                            <goal>clean</goal>
-                        </goals>
-                    </execution>
-                </executions>
             </plugin>
         </plugins>
     </build>
